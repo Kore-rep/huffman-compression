@@ -1,15 +1,20 @@
 package huffman.compression;
 
-public class CharacterFrequency implements Comparable<CharacterFrequency> {
+public class CharacterFrequencyMapping implements Comparable<CharacterFrequencyMapping> {
     private Character character;
     private Integer frequency;
 
-    public CharacterFrequency(Character c) {
+    public CharacterFrequencyMapping(Character c, Integer f) {
         this.character = c;
-        frequency = 0;
+        this.frequency = f;
     }
 
-    public CharacterFrequency() {
+    public CharacterFrequencyMapping(Character c) {
+        this.character = c;
+        this.frequency = 0;
+    }
+
+    public CharacterFrequencyMapping() {
         throw new UnsupportedOperationException();
     }
 
@@ -37,7 +42,7 @@ public class CharacterFrequency implements Comparable<CharacterFrequency> {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        CharacterFrequency other = (CharacterFrequency) obj;
+        CharacterFrequencyMapping other = (CharacterFrequencyMapping) obj;
         if (frequency == null) {
             if (other.frequency != null)
                 return false;
@@ -59,7 +64,7 @@ public class CharacterFrequency implements Comparable<CharacterFrequency> {
     // }
 
     @Override
-    public int compareTo(CharacterFrequency o) {
+    public int compareTo(CharacterFrequencyMapping o) {
         return this.frequency.compareTo(o.frequency);
     }
 

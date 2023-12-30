@@ -6,22 +6,23 @@ package huffman.compression;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.stream.Stream;
-import java.util.List;
-import java.util.Map;
+
+import huffman.compression.HuffTree.HuffTree;
 
 public class Compressor {
 
     public static void main(String[] args) {
     }
 
-    public static HashMap<Character, Integer> generateFrequencies(String filePath) throws IOException {
+    public static HashMap<Character, Integer> calculateCharacterFrequencies(String filePath) throws IOException {
         if (!filePath.endsWith(".txt"))
             throw new UnsupportedOperationException("Only supported text files.");
         HashMap<Character, Integer> map = new HashMap<>();
+
         try (Stream<String> lines = Files.lines(Paths.get(filePath))) {
             lines.forEach(line -> {
                 line.chars().forEach(c -> {
@@ -31,5 +32,25 @@ public class Compressor {
             });
         }
         return map;
+    }
+
+    public static PriorityQueue<HuffTree> buildPriorityQueue(Map<Character, Integer> map) {
+        PriorityQueue<HuffTree> heap = new PriorityQueue<>();
+        map.entrySet().forEach(entry -> {
+            heap.add(new HuffTree(entry.getKey(), entry.getValue()));
+        });
+        return heap;
+    }
+
+    public static HuffTree buildBinaryTree(PriorityQueue<HuffTree> heap) {
+        HuffTree tmp1, tmp2, tree = null;
+
+        while (heap.size() > 1) {
+            tmp1 = heap.poll();
+            tmp2 = heap.poll();
+            tree = new HuffTree(tmp1.root(), tmp2.root(), tmp1.weight() + tmp2.weight());
+            heap.add(tree);
+        }
+        return tree;
     }
 }
