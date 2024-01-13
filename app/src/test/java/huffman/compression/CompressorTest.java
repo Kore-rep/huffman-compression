@@ -126,4 +126,42 @@ class CompressorTest {
             assert (false);
         }
     }
+
+    // https://opendsa-server.cs.vt.edu/ODSA/Books/CS3/html/Huffman.html#freqexamp
+    @Test
+    void compressorBuildsPrefixTable() {
+        try {
+            HuffLeafNode e = new HuffLeafNode('E', 120);
+            HuffLeafNode u = new HuffLeafNode('U', 37);
+            HuffLeafNode d = new HuffLeafNode('D', 41);
+            HuffLeafNode l = new HuffLeafNode('L', 42);
+            HuffLeafNode c = new HuffLeafNode('C', 32);
+            HuffLeafNode z = new HuffLeafNode('Z', 2);
+            HuffLeafNode k = new HuffLeafNode('K', 7);
+            HuffLeafNode m = new HuffLeafNode('M', 24);
+            HuffInternalNode i1 = new HuffInternalNode(z, k, 9);
+            HuffInternalNode i2 = new HuffInternalNode(i1, m, 33);
+            HuffInternalNode i3 = new HuffInternalNode(c, i2, 65);
+            HuffInternalNode i4 = new HuffInternalNode(l, i3, 107);
+            HuffInternalNode i5 = new HuffInternalNode(u, d, 78);
+            HuffInternalNode i6 = new HuffInternalNode(i5, i4, 185);
+            HuffInternalNode i7 = new HuffInternalNode(e, i6, 305);
+            HuffTree tree = new HuffTree(i7);
+
+            HashMap<Character, String> prefixTable = Compressor.buildPrefixCodeTable(tree);
+            HashMap<Character, String> expectedTable = new HashMap<>();
+            expectedTable.put('E', "0");
+            expectedTable.put('U', "100");
+            expectedTable.put('D', "101");
+            expectedTable.put('L', "110");
+            expectedTable.put('C', "1110");
+            expectedTable.put('Z', "111100");
+            expectedTable.put('K', "111101");
+            expectedTable.put('M', "11111");
+            assert (expectedTable.equals(prefixTable));
+        } catch (UnsupportedOperationException e) {
+            assert (false);
+        }
+    }
+
 }

@@ -11,7 +11,10 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.stream.Stream;
 
+import huffman.compression.HuffTree.HuffInternalNode;
+import huffman.compression.HuffTree.HuffLeafNode;
 import huffman.compression.HuffTree.HuffTree;
+import huffman.compression.interfaces.HuffBaseNode;
 
 public class Compressor {
 
@@ -52,5 +55,22 @@ public class Compressor {
             heap.add(tree);
         }
         return tree;
+    }
+
+    public static HashMap<Character, String> buildPrefixCodeTable(HuffTree tree) {
+        HashMap<Character, String> prefixTable = new HashMap<>();
+        preOrderTraversal(tree.root(), prefixTable, "");
+        return prefixTable;
+    }
+
+    public static void preOrderTraversal(HuffBaseNode root, HashMap<Character, String> map, String code) {
+
+        HuffBaseNode node = root;
+        if (root.isLeaf()) {
+            map.put(((HuffLeafNode) node).value(), code);
+            return;
+        }
+        preOrderTraversal(((HuffInternalNode) root).left(), map, code + "0");
+        preOrderTraversal(((HuffInternalNode) root).right(), map, code + "1");
     }
 }

@@ -14,11 +14,11 @@ public class HuffInternalNode implements HuffBaseNode {
         weight = wt;
     }
 
-    HuffBaseNode left() {
+    public HuffBaseNode left() {
         return left;
     }
 
-    HuffBaseNode right() {
+    public HuffBaseNode right() {
         return right;
     }
 
@@ -28,6 +28,10 @@ public class HuffInternalNode implements HuffBaseNode {
 
     public boolean isLeaf() {
         return false;
+    }
+
+    public char value() {
+        throw new UnsupportedOperationException("Internal nodes do not have a value");
     }
 
     @Override
