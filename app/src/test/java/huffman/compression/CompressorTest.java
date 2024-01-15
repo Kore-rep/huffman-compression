@@ -8,14 +8,15 @@ import org.junit.jupiter.api.Test;
 import huffman.compression.HuffTree.HuffInternalNode;
 import huffman.compression.HuffTree.HuffLeafNode;
 import huffman.compression.HuffTree.HuffTree;
-import huffman.compression.interfaces.HuffBaseNode;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Scanner;
 
 class CompressorTest {
 
@@ -164,4 +165,31 @@ class CompressorTest {
         }
     }
 
+    @Test
+    void CompressorWritesPrefixTableToFile() {
+        HashMap<Character, String> expectedTable = new HashMap<>();
+        expectedTable.put('E', "0");
+        expectedTable.put('U', "100");
+        expectedTable.put('D', "101");
+        expectedTable.put('L', "110");
+        expectedTable.put('C', "1110");
+        expectedTable.put('Z', "111100");
+        expectedTable.put('K', "111101");
+        expectedTable.put('M', "11111");
+        try {
+            File file = new File("src/test/resources/example");
+            file.delete();
+            Compressor.writeHeaderToFile(expectedTable, file);
+            try (Scanner s = new Scanner(file)) {
+                String openingDelim = s.nextLine();
+                assertEquals(Compressor.HEADER_DELIMITER.trim(), openingDelim);
+                String mapString = s.nextLine();
+                assertEquals(expectedTable.toString(), mapString);
+                String closingDelim = s.nextLine();
+                assertEquals(Compressor.HEADER_DELIMITER.trim(), closingDelim);
+            }
+        } catch (IOException e) {
+            assert (false);
+        }
+    }
 }

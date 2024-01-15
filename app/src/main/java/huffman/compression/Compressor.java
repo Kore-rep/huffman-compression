@@ -4,12 +4,15 @@
 package huffman.compression;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.stream.Stream;
+import java.io.File;
+import java.io.FileWriter;
 
 import huffman.compression.HuffTree.HuffInternalNode;
 import huffman.compression.HuffTree.HuffLeafNode;
@@ -17,6 +20,8 @@ import huffman.compression.HuffTree.HuffTree;
 import huffman.compression.interfaces.HuffBaseNode;
 
 public class Compressor {
+
+    public static final String HEADER_DELIMITER = "!H-H!\n";
 
     public static void main(String[] args) {
     }
@@ -72,5 +77,19 @@ public class Compressor {
         }
         preOrderTraversal(((HuffInternalNode) root).left(), map, code + "0");
         preOrderTraversal(((HuffInternalNode) root).right(), map, code + "1");
+    }
+
+    // Can either write frequency table or graph
+    // Have chosen to go with frequency table as it should be easier to reconstruct
+    public static void writeHeaderToFile(HashMap<Character, String> map, File f) throws IOException {
+        if (f.createNewFile()) {
+            try (FileWriter writer = new FileWriter(f)) {
+                writer.append(HEADER_DELIMITER);
+                writer.append(map.toString() + '\n');
+                writer.append(HEADER_DELIMITER);
+            }
+        } else {
+            throw new FileAlreadyExistsException(f.getName());
+        }
     }
 }
