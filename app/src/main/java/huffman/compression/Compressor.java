@@ -8,11 +8,14 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Scanner;
+import java.util.Set;
 import java.util.Map.Entry;
-import java.util.stream.Collector;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.io.File;
@@ -94,14 +97,24 @@ public class Compressor {
 
     public static HashMap<Character, Integer> calculateCharacterFrequencies(String filePath) throws IOException {
         HashMap<Character, Integer> map = new HashMap<>();
-        try (Stream<String> lines = Files.lines(Paths.get(filePath))) {
-            lines.forEach(line -> {
+        Pattern pat = Pattern.compile(".*\\R|.+\\z");
+        try (Scanner in = new Scanner(Paths.get(filePath))) {
+            String line;
+            while ((line = in.findWithinHorizon(pat, 0)) != null) {
                 line.chars().forEach(c -> {
-                    map.put((char) c, map.getOrDefault((char) c, 0) + 1);
+                    char d = (char) c;
+                    map.put(d, map.getOrDefault(d, 0) + 1);
                 });
-
-            });
+            }
         }
+        // try (Stream<String> lines = Files.lines(Paths.get(filePath))) {
+        // lines.forEach(line -> {
+        // line.chars().forEach(c -> {
+        // map.put((char) c, map.getOrDefault((char) c, 0) + 1);
+        // });
+
+        // });
+        // }
         return map;
     }
 
@@ -150,7 +163,8 @@ public class Compressor {
         if (f.createNewFile()) {
             try (FileWriter writer = new FileWriter(f)) {
                 writer.append(HEADER_DELIMITER);
-                writer.append(invertedMap.toString() + '\n');
+                String mapStr = mapToString(invertedMap);
+                writer.append(mapStr + '\n');
                 writer.append(HEADER_DELIMITER);
             }
         } else {
@@ -163,6 +177,20 @@ public class Compressor {
         return map.entrySet()
                 .stream()
                 .collect(Collectors.toMap(Entry::getValue, Entry::getKey));
+    }
+
+    public static <K, V> String mapToString(Map<K, V> map) {
+        return map.entrySet()
+                .stream()
+                .map(entry -> entry.getKey() + "=" + escapeSpecialChars((char) entry.getValue()))
+                .collect(Collectors.joining(", ", "{", "}"));
+    }
+
+    public static String escapeSpecialChars(char value) {
+        HashSet<Character> specialSet = new HashSet<>(Set.of('\n', '\r', '\f'));
+        if (specialSet.contains(value))
+            return "\\" + String.valueOf(value);
+        return String.valueOf(value);
     }
 
     public static void writeContentsToFile(HashMap<Character, String> map, String inFilePath, String outFilePath)

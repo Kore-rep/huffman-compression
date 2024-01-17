@@ -44,6 +44,16 @@ class CompressorTest {
             assertEquals(9, map.get('p'));
             assertEquals(1, map.get('l'));
             assertEquals(false, map.containsKey('d'));
+            HashMap<Character, Integer> expectedMap = new HashMap<>();
+            expectedMap.put('a', 10);
+            expectedMap.put('b', 4);
+            expectedMap.put('c', 11);
+            expectedMap.put('p', 9);
+            expectedMap.put('l', 1);
+            expectedMap.put('\r', 19);
+            expectedMap.put('\n', 19);
+
+            assertEquals(expectedMap, map);
         } catch (IOException e) {
             assert (false);
         }
@@ -180,6 +190,16 @@ class CompressorTest {
     }
 
     @Test
+    void compressorConvertsMapToString() {
+        HashMap<Character, String> map = new HashMap<>();
+        map.put('a', "A string");
+        map.put('b', "B string");
+
+        String expected = "{a=A string, b=B string}";
+        assertEquals(expected, Compressor.mapToString(map));
+    }
+
+    @Test
     void CompressorWritesPrefixTableToFile() {
         HashMap<Character, String> charTable = new HashMap<>();
         charTable.put('E', "0");
@@ -229,7 +249,49 @@ class CompressorTest {
     }
 
     @Test
+    void CompressorWritesMultiLineContentToFile() {
+        try {
+            String inFile = "src/test/resources/multiLineExample.txt";
+            String outFile = "src/test/resources/multiLineOut.txt";
+            File outFilef = new File(outFile);
+            outFilef.delete();
+            Compressor.encode(inFile, outFile);
+            try (Scanner s = new Scanner(outFilef)) {
+                s.nextLine();
+                s.nextLine();
+                s.nextLine();
+                String actualCompression = s.nextLine();
+                assertEquals("000000011010010001111111111111101101010", actualCompression);
+                actualCompression = s.nextLine();
+                assertEquals("000000011010010001111111111111101101010", actualCompression);
+                actualCompression = s.nextLine();
+                assertEquals("000000011010010001111111111111101101010", actualCompression);
+            }
+        } catch (IOException e) {
+            assert (false);
+        }
+    }
+
+    @Test
     void CompressorDecompressesFile() {
+        try {
+            String outFile = "src/test/resources/outExample.txt";
+            String inFile = "src/test/resources/fullOut";
+            File outFilef = new File(outFile);
+            outFilef.delete();
+            Compressor.decode(inFile, outFile);
+            try (Scanner s = new Scanner(outFilef)) {
+                String actualString = s.nextLine();
+                String expectedString = "aaabccdeeeeeffg";
+                assertEquals(expectedString, actualString);
+            }
+        } catch (IOException e) {
+            assert (false);
+        }
+    }
+
+    @Test
+    void CompressorDecompressesMultiLineFile() {
         try {
             String outFile = "src/test/resources/outExample.txt";
             String inFile = "src/test/resources/fullOut";
