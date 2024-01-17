@@ -227,4 +227,22 @@ class CompressorTest {
             assert (false);
         }
     }
+
+    @Test
+    void CompressorDecompressesFile() {
+        try {
+            String outFile = "src/test/resources/outExample.txt";
+            String inFile = "src/test/resources/fullOut";
+            File outFilef = new File(outFile);
+            outFilef.delete();
+            Compressor.decode(inFile, outFile);
+            try (Scanner s = new Scanner(outFilef)) {
+                String actualString = s.nextLine();
+                String expectedString = "aaabccdeeeeeffg";
+                assertEquals(expectedString, actualString);
+            }
+        } catch (IOException e) {
+            assert (false);
+        }
+    }
 }

@@ -8,6 +8,7 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Map.Entry;
@@ -46,13 +47,49 @@ public class Compressor {
     }
 
     public static void decode(String inFilePath, String outFilePath) throws IOException {
-        try (Stream<String> lines = Files.lines(Paths.get(inFilePath))) {
-            lines.forEach(line -> {
-                line.chars().forEach(c -> {
-                });
+        try (FileWriter writer = new FileWriter(outFilePath)) {
+            StringBuilder mappingString = new StringBuilder();
+            StringBuilder outString = new StringBuilder();
+            try (Stream<String> lines = Files.lines(Paths.get(inFilePath))) {
+                Iterator<String> it = lines.iterator();
+                HashMap<String, Character> mapping = new HashMap<>();
+                if (it.next().equals(HEADER_DELIMITER.trim())) {
+                    String hashMapString = it.next();
+                    mapping = constructMap(hashMapString);
+                    if (!it.next().equals(HEADER_DELIMITER.trim())) {
+                        throw new IOException("File header is not in the correct format");
+                    }
+                } else {
+                    throw new IOException("File header is not in the correct format");
+                }
+                while (it.hasNext()) {
+                    String line = it.next();
+                    // Consumer header and construct map
 
-            });
+                    for (int i = 0; i < line.chars().count(); i++) {
+                        mappingString.append(line.charAt(i));
+                        if (mapping.containsKey(mappingString.toString())) {
+                            outString.append(mapping.get(mappingString.toString()));
+                            mappingString.setLength(0);
+                        }
+                    }
+                    writer.append(outString.toString());
+                    outString.setLength(0);
+                }
+            }
         }
+    }
+
+    // {00=a, 11=e, 100=c, 101=f, 0110=b, 0111=d, 010=g}
+    public static HashMap<String, Character> constructMap(String mapString) {
+        HashMap<String, Character> outMap = new HashMap<>();
+        String[] pairs = mapString.substring(1, mapString.length() - 1).split(",");
+        for (String pair : pairs) {
+            String[] kV = pair.split("=");
+            outMap.put(kV[0].trim(), kV[1].charAt(0));
+        }
+        return outMap;
+
     }
 
     public static HashMap<Character, Integer> calculateCharacterFrequencies(String filePath) throws IOException {
