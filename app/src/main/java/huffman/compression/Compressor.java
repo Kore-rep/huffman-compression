@@ -24,13 +24,27 @@ public class Compressor {
     public static final String HEADER_DELIMITER = "!H-H!\n";
 
     public static void main(String[] args) {
+        // Assume filepath is first arg
+        String inFilePath = args[0];
+        String outFilePath = args[1];
+
+        if (!inFilePath.endsWith(".txt"))
+            throw new UnsupportedOperationException("Only supports text files.");
+        try {
+            HashMap<Character, Integer> charFreqs = calculateCharacterFrequencies(inFilePath);
+            PriorityQueue<HuffTree> queue = buildPriorityQueue(charFreqs);
+            HuffTree bintree = buildBinaryTree(queue);
+            HashMap<Character, String> prefixTable = buildPrefixCodeTable(bintree);
+            writeHeaderToFile(prefixTable, new File(outFilePath));
+            writeContentsToFile(prefixTable, inFilePath, outFilePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
     public static HashMap<Character, Integer> calculateCharacterFrequencies(String filePath) throws IOException {
-        if (!filePath.endsWith(".txt"))
-            throw new UnsupportedOperationException("Only supported text files.");
         HashMap<Character, Integer> map = new HashMap<>();
-
         try (Stream<String> lines = Files.lines(Paths.get(filePath))) {
             lines.forEach(line -> {
                 line.chars().forEach(c -> {
@@ -90,6 +104,27 @@ public class Compressor {
             }
         } else {
             throw new FileAlreadyExistsException(f.getName());
+        }
+    }
+
+    public static void writeContentsToFile(HashMap<Character, String> map, String inFilePath, String outFilePath)
+            throws IOException {
+        try (FileWriter writer = new FileWriter(outFilePath, true)) {
+            StringBuilder lineBuilder = new StringBuilder();
+            try (Stream<String> lines = Files.lines(Paths.get(inFilePath))) {
+                lines.forEach(line -> {
+
+                    line.chars().forEach(c -> {
+                        lineBuilder.append(map.get((char) c));
+                    });
+                    try {
+                        writer.append(lineBuilder.toString());
+                    } catch (IOException e) {
+                    }
+
+                    lineBuilder.setLength(0);
+                });
+            }
         }
     }
 }

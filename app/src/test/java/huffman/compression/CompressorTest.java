@@ -61,7 +61,7 @@ class CompressorTest {
     @Test
     void compressorErrorsOnIncorrectFileFormat() {
         try {
-            Compressor.calculateCharacterFrequencies("./src/test/resources/nothere");
+            Compressor.calculateCharacterFrequencies("./src/test/resources/otherFormat.bin");
         } catch (IOException e) {
             assert (false);
         } catch (UnsupportedOperationException e) {
@@ -187,6 +187,26 @@ class CompressorTest {
                 assertEquals(expectedTable.toString(), mapString);
                 String closingDelim = s.nextLine();
                 assertEquals(Compressor.HEADER_DELIMITER.trim(), closingDelim);
+            }
+        } catch (IOException e) {
+            assert (false);
+        }
+    }
+
+    @Test
+    void CompressorWritesContentToFile() {
+        try {
+            String inFile = "src/test/resources/fullExample.txt";
+            String outFile = "src/test/resources/fullOut";
+            File outFilef = new File(outFile);
+            outFilef.delete();
+            Compressor.main(new String[] { inFile, outFile });
+            try (Scanner s = new Scanner(outFilef)) {
+                s.nextLine();
+                s.nextLine();
+                s.nextLine();
+                String actualCompression = s.nextLine();
+                assertEquals("000000011010010001111111111111101101010", actualCompression);
             }
         } catch (IOException e) {
             assert (false);
