@@ -166,25 +166,40 @@ class CompressorTest {
     }
 
     @Test
+    void compressorInvertsMap() {
+        HashMap<Character, String> mapToSwap = new HashMap<>();
+        mapToSwap.put('a', "A string");
+        mapToSwap.put('b', "B string");
+
+        Map<String, Character> swappedMap = Compressor.invertMap(mapToSwap);
+        HashMap<String, Character> expectedMap = new HashMap<>();
+        expectedMap.put("A string", 'a');
+        expectedMap.put("B string", 'b');
+
+        assertEquals(expectedMap, swappedMap);
+    }
+
+    @Test
     void CompressorWritesPrefixTableToFile() {
-        HashMap<Character, String> expectedTable = new HashMap<>();
-        expectedTable.put('E', "0");
-        expectedTable.put('U', "100");
-        expectedTable.put('D', "101");
-        expectedTable.put('L', "110");
-        expectedTable.put('C', "1110");
-        expectedTable.put('Z', "111100");
-        expectedTable.put('K', "111101");
-        expectedTable.put('M', "11111");
+        HashMap<Character, String> charTable = new HashMap<>();
+        charTable.put('E', "0");
+        charTable.put('U', "100");
+        charTable.put('D', "101");
+        charTable.put('L', "110");
+        charTable.put('C', "1110");
+        charTable.put('Z', "111100");
+        charTable.put('K', "111101");
+        charTable.put('M', "11111");
+        Map<String, Character> expectedMap = Compressor.invertMap(charTable);
         try {
             File file = new File("src/test/resources/example");
             file.delete();
-            Compressor.writeHeaderToFile(expectedTable, file);
+            Compressor.writeHeaderToFile(charTable, file);
             try (Scanner s = new Scanner(file)) {
                 String openingDelim = s.nextLine();
                 assertEquals(Compressor.HEADER_DELIMITER.trim(), openingDelim);
                 String mapString = s.nextLine();
-                assertEquals(expectedTable.toString(), mapString);
+                assertEquals(expectedMap.toString(), mapString);
                 String closingDelim = s.nextLine();
                 assertEquals(Compressor.HEADER_DELIMITER.trim(), closingDelim);
             }
@@ -200,7 +215,7 @@ class CompressorTest {
             String outFile = "src/test/resources/fullOut";
             File outFilef = new File(outFile);
             outFilef.delete();
-            Compressor.main(new String[] { inFile, outFile });
+            Compressor.encode(inFile, outFile);
             try (Scanner s = new Scanner(outFilef)) {
                 s.nextLine();
                 s.nextLine();

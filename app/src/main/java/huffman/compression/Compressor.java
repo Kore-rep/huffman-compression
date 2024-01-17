@@ -10,6 +10,9 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Map.Entry;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.io.File;
 import java.io.FileWriter;
@@ -24,10 +27,9 @@ public class Compressor {
     public static final String HEADER_DELIMITER = "!H-H!\n";
 
     public static void main(String[] args) {
-        // Assume filepath is first arg
-        String inFilePath = args[0];
-        String outFilePath = args[1];
+    }
 
+    public static void encode(String inFilePath, String outFilePath) {
         if (!inFilePath.endsWith(".txt"))
             throw new UnsupportedOperationException("Only supports text files.");
         try {
@@ -40,6 +42,16 @@ public class Compressor {
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
+        }
+    }
+
+    public static void decode(String inFilePath, String outFilePath) throws IOException {
+        try (Stream<String> lines = Files.lines(Paths.get(inFilePath))) {
+            lines.forEach(line -> {
+                line.chars().forEach(c -> {
+                });
+
+            });
         }
     }
 
@@ -95,16 +107,25 @@ public class Compressor {
 
     // Can either write frequency table or graph
     // Have chosen to go with frequency table as it should be easier to reconstruct
+    // Invert map when storing for easier reconstruction of data
     public static void writeHeaderToFile(HashMap<Character, String> map, File f) throws IOException {
+        Map<String, Character> invertedMap = invertMap(map);
         if (f.createNewFile()) {
             try (FileWriter writer = new FileWriter(f)) {
                 writer.append(HEADER_DELIMITER);
-                writer.append(map.toString() + '\n');
+                writer.append(invertedMap.toString() + '\n');
                 writer.append(HEADER_DELIMITER);
             }
         } else {
             throw new FileAlreadyExistsException(f.getName());
         }
+    }
+
+    // Only use with guaranteed unique mappings (as in this case)
+    public static <V, K> Map<V, K> invertMap(Map<K, V> map) {
+        return map.entrySet()
+                .stream()
+                .collect(Collectors.toMap(Entry::getValue, Entry::getKey));
     }
 
     public static void writeContentsToFile(HashMap<Character, String> map, String inFilePath, String outFilePath)
