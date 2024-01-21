@@ -58,7 +58,7 @@ public class Compressor {
                 HashMap<String, Character> mapping = new HashMap<>();
                 if (it.next().equals(HEADER_DELIMITER.trim())) {
                     String hashMapString = it.next();
-                    mapping = constructMap(hashMapString);
+                    mapping = constructMapFromString(hashMapString);
                     if (!it.next().equals(HEADER_DELIMITER.trim())) {
                         throw new IOException("File header is not in the correct format");
                     }
@@ -84,14 +84,26 @@ public class Compressor {
     }
 
     // {00=a, 11=e, 100=c, 101=f, 0110=b, 0111=d, 010=g}
-    public static HashMap<String, Character> constructMap(String mapString) {
+    public static HashMap<String, Character> constructMapFromString(String mapString) {
         HashMap<String, Character> outMap = new HashMap<>();
         String[] pairs = mapString.substring(1, mapString.length() - 1).split(",");
         for (String pair : pairs) {
             String[] kV = pair.split("=");
-            outMap.put(kV[0].trim(), kV[1].charAt(0));
+            char c = constructCharValue(kV[1]);
+            outMap.put(kV[0].trim(), c);
         }
         return outMap;
+
+    }
+
+    public static char constructCharValue(String s) {
+        if (s.length() < 2)
+            return s.charAt(0);
+        if (s.contains("n"))
+            return '\n';
+        if (s.contains("r"))
+            return '\r';
+        throw new UnsupportedOperationException("Not a supported special char");
 
     }
 
@@ -163,7 +175,7 @@ public class Compressor {
         if (f.createNewFile()) {
             try (FileWriter writer = new FileWriter(f)) {
                 writer.append(HEADER_DELIMITER);
-                String mapStr = mapToString(invertedMap);
+                String mapStr = charMapToString(invertedMap);
                 writer.append(mapStr + '\n');
                 writer.append(HEADER_DELIMITER);
             }
@@ -179,38 +191,50 @@ public class Compressor {
                 .collect(Collectors.toMap(Entry::getValue, Entry::getKey));
     }
 
-    public static <K, V> String mapToString(Map<K, V> map) {
+    public static <K, V> String charMapToString(Map<K, Character> map) {
         return map.entrySet()
                 .stream()
-                .map(entry -> entry.getKey() + "=" + escapeSpecialChars((char) entry.getValue()))
+                .map(entry -> entry.getKey() + "=" + escapeSpecialChars(entry.getValue()))
                 .collect(Collectors.joining(", ", "{", "}"));
     }
 
-    public static String escapeSpecialChars(char value) {
-        HashSet<Character> specialSet = new HashSet<>(Set.of('\n', '\r', '\f'));
-        if (specialSet.contains(value))
-            return "\\" + String.valueOf(value);
+    public static String escapeSpecialChars(Character value) {
+        // For some reason the below method does not escape the characters
+        // Instead we use a clunky manual method
+        // HashSet<Character> specialSet = new HashSet<>(Set.of('\n', '\r', '\f'));
+        // if (specialSet.contains(value)) {
+        // String c = "\" + String.valueOf(value);
+        // return c;
+        // }
+        if (value == '\n')
+            return "\\n";
+        if (value == '\r')
+            return "\\r";
+        if (value == '\f')
+            return "\\f";
         return String.valueOf(value);
     }
 
     public static void writeContentsToFile(HashMap<Character, String> map, String inFilePath, String outFilePath)
             throws IOException {
-        try (FileWriter writer = new FileWriter(outFilePath, true)) {
-            StringBuilder lineBuilder = new StringBuilder();
-            try (Stream<String> lines = Files.lines(Paths.get(inFilePath))) {
-                lines.forEach(line -> {
 
+        try (FileWriter writer = new FileWriter(outFilePath, true)) {
+            Pattern pat = Pattern.compile(".*\\R|.+\\z");
+            StringBuilder lineBuilder = new StringBuilder();
+            try (Scanner in = new Scanner(Paths.get(inFilePath))) {
+                String line;
+                while ((line = in.findWithinHorizon(pat, 0)) != null) {
                     line.chars().forEach(c -> {
                         lineBuilder.append(map.get((char) c));
                     });
-                    try {
-                        writer.append(lineBuilder.toString());
-                    } catch (IOException e) {
-                    }
-
-                    lineBuilder.setLength(0);
-                });
+                }
+                try {
+                    writer.append(lineBuilder.toString());
+                } catch (IOException e) {
+                }
+                lineBuilder.setLength(0);
             }
         }
+        ;
     }
 }

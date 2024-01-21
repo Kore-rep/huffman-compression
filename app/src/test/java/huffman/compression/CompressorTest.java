@@ -191,12 +191,13 @@ class CompressorTest {
 
     @Test
     void compressorConvertsMapToString() {
-        HashMap<Character, String> map = new HashMap<>();
-        map.put('a', "A string");
-        map.put('b', "B string");
+        HashMap<Character, Character> map = new HashMap<>();
+        map.put('a', 'd');
+        map.put('b', 'd');
 
-        String expected = "{a=A string, b=B string}";
-        assertEquals(expected, Compressor.mapToString(map));
+        String expected = "{a=d, b=d}";
+        String mapped = Compressor.charMapToString(map);
+        assertEquals(expected, mapped);
     }
 
     @Test
@@ -261,11 +262,9 @@ class CompressorTest {
                 s.nextLine();
                 s.nextLine();
                 String actualCompression = s.nextLine();
-                assertEquals("000000011010010001111111111111101101010", actualCompression);
-                actualCompression = s.nextLine();
-                assertEquals("000000011010010001111111111111101101010", actualCompression);
-                actualCompression = s.nextLine();
-                assertEquals("000000011010010001111111111111101101010", actualCompression);
+                assertEquals(
+                        "11111101101011010011100100100100100010010011100010000111111011010110100111000010001001001110001000011111101101011010011111111110100100111",
+                        actualCompression);
             }
         } catch (IOException e) {
             assert (false);
@@ -293,14 +292,20 @@ class CompressorTest {
     @Test
     void CompressorDecompressesMultiLineFile() {
         try {
-            String outFile = "src/test/resources/outExample.txt";
-            String inFile = "src/test/resources/fullOut";
+            String outFile = "src/test/resources/multiLineOut.txt";
+            String inFile = "src/test/resources/multiLineCompressed";
             File outFilef = new File(outFile);
             outFilef.delete();
             Compressor.decode(inFile, outFile);
             try (Scanner s = new Scanner(outFilef)) {
                 String actualString = s.nextLine();
                 String expectedString = "aaabccdeeeeeffg";
+                assertEquals(expectedString, actualString);
+                actualString = s.nextLine();
+                expectedString = "aaabccde//fg";
+                assertEquals(expectedString, actualString);
+                actualString = s.nextLine();
+                expectedString = "aaabccdaaaaffg";
                 assertEquals(expectedString, actualString);
             }
         } catch (IOException e) {
