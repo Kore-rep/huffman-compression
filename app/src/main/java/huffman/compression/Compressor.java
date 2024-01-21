@@ -30,25 +30,35 @@ public class Compressor {
 
     // TODO: Implement commandline controls
     public static void main(String[] args) {
-    }
-
-    public static void encode(String inFilePath, String outFilePath) {
-        if (!inFilePath.endsWith(".txt"))
-            throw new UnsupportedOperationException("Only supports text files.");
+        if (args.length != 3)
+            System.err.println("Usage: compression <encode/decode> <input-file> <output-file>");
         try {
-            HashMap<Character, Integer> charFreqs = calculateCharacterFrequencies(inFilePath);
-            PriorityQueue<HuffTree> queue = buildPriorityQueue(charFreqs);
-            HuffTree bintree = buildBinaryTree(queue);
-            HashMap<Character, String> prefixTable = buildPrefixCodeTable(bintree);
-            writeHeaderToFile(prefixTable, new File(outFilePath));
-            writeContentsToFile(prefixTable, inFilePath, outFilePath);
+            if (args[0].equals("encode") || args[0].equals("e")) {
+                encode(args[1], args[2]);
+            } else if ((args[0].equals("decode") || args[0].equals("d"))) {
+                decode(args[1], args[2]);
+            }
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
         }
+        System.exit(0);
+    }
+
+    public static void encode(String inFilePath, String outFilePath) throws IOException {
+        if (!inFilePath.endsWith(".txt"))
+            throw new UnsupportedOperationException("Only supports text files.");
+        HashMap<Character, Integer> charFreqs = calculateCharacterFrequencies(inFilePath);
+        PriorityQueue<HuffTree> queue = buildPriorityQueue(charFreqs);
+        HuffTree bintree = buildBinaryTree(queue);
+        HashMap<Character, String> prefixTable = buildPrefixCodeTable(bintree);
+        writeHeaderToFile(prefixTable, new File(outFilePath));
+        writeContentsToFile(prefixTable, inFilePath, outFilePath);
     }
 
     public static void decode(String inFilePath, String outFilePath) throws IOException {
+        if (!outFilePath.endsWith(".txt"))
+            throw new UnsupportedOperationException("Only supports text files.");
         try (FileWriter writer = new FileWriter(outFilePath)) {
             StringBuilder mappingString = new StringBuilder();
             StringBuilder outString = new StringBuilder();
