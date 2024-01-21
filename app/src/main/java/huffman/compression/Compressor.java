@@ -8,12 +8,10 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -30,6 +28,7 @@ public class Compressor {
 
     public static final String HEADER_DELIMITER = "!H-H!\n";
 
+    // TODO: Implement commandline controls
     public static void main(String[] args) {
     }
 
@@ -67,7 +66,6 @@ public class Compressor {
                 }
                 while (it.hasNext()) {
                     String line = it.next();
-                    // Consumer header and construct map
 
                     for (int i = 0; i < line.chars().count(); i++) {
                         mappingString.append(line.charAt(i));
@@ -83,7 +81,6 @@ public class Compressor {
         }
     }
 
-    // {00=a, 11=e, 100=c, 101=f, 0110=b, 0111=d, 010=g}
     public static HashMap<String, Character> constructMapFromString(String mapString) {
         HashMap<String, Character> outMap = new HashMap<>();
         String[] pairs = mapString.substring(1, mapString.length() - 1).split(",");
@@ -93,9 +90,10 @@ public class Compressor {
             outMap.put(kV[0].trim(), c);
         }
         return outMap;
-
     }
 
+    // In this case java seems to treat "\n" as '\' and 'n', not '\n'.
+    // TODO: Find a way around this
     public static char constructCharValue(String s) {
         if (s.length() < 2)
             return s.charAt(0);
@@ -104,7 +102,6 @@ public class Compressor {
         if (s.contains("r"))
             return '\r';
         throw new UnsupportedOperationException("Not a supported special char");
-
     }
 
     public static HashMap<Character, Integer> calculateCharacterFrequencies(String filePath) throws IOException {
@@ -119,14 +116,6 @@ public class Compressor {
                 });
             }
         }
-        // try (Stream<String> lines = Files.lines(Paths.get(filePath))) {
-        // lines.forEach(line -> {
-        // line.chars().forEach(c -> {
-        // map.put((char) c, map.getOrDefault((char) c, 0) + 1);
-        // });
-
-        // });
-        // }
         return map;
     }
 
@@ -157,7 +146,6 @@ public class Compressor {
     }
 
     public static void preOrderTraversal(HuffBaseNode root, HashMap<Character, String> map, String code) {
-
         HuffBaseNode node = root;
         if (root.isLeaf()) {
             map.put(((HuffLeafNode) node).value(), code);
@@ -235,6 +223,5 @@ public class Compressor {
                 lineBuilder.setLength(0);
             }
         }
-        ;
     }
 }

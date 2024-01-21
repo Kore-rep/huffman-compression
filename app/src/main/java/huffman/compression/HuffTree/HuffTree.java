@@ -2,7 +2,7 @@ package huffman.compression.HuffTree;
 
 import huffman.compression.interfaces.HuffBaseNode;
 
-public class HuffTree implements Comparable {
+public class HuffTree implements Comparable<HuffTree> {
     private HuffBaseNode root;
 
     public HuffTree(char el, int wt) {
@@ -26,7 +26,7 @@ public class HuffTree implements Comparable {
         return root.weight();
     }
 
-    public int compareTo(Object t) {
+    public int compareTo(HuffTree t) {
         HuffTree that = (HuffTree) t;
         if (root.weight() < that.weight()) {
             return -1;
